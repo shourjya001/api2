@@ -1,0 +1,26 @@
+# Root Logger
+log4j.rootLogger=INFO, stdout
+
+# Primary Role API Logger
+log4j.logger.PrimaryRoleApiLogger=INFO, PrimaryRoleFile
+log4j.additivity.PrimaryRoleApiLogger=false
+log4j.appender.PrimaryRoleFile=com.socgen.dbe.CustomMultiApiAppender
+log4j.appender.PrimaryRoleFile.apiName=primary_role
+log4j.appender.PrimaryRoleFile.baseLogPath=../maestro_lib/logs
+log4j.appender.PrimaryRoleFile.layout=org.apache.log4j.PatternLayout
+log4j.appender.PrimaryRoleFile.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n
+
+# Sensitivity API Logger
+log4j.logger.SensitivityApiLogger=INFO, SensitivityFile
+log4j.additivity.SensitivityApiLogger=false
+log4j.appender.SensitivityFile=com.socgen.dbe.CustomMultiApiAppender
+log4j.appender.SensitivityFile.apiName=sensitivity
+log4j.appender.SensitivityFile.baseLogPath=../maestro_lib/logs
+log4j.appender.SensitivityFile.layout=org.apache.log4j.PatternLayout
+log4j.appender.SensitivityFile.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n
+
+# Console Appender
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.Target=System.out
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n
