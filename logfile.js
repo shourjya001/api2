@@ -1,52 +1,51 @@
 package com.socgen.dbe;
 
+import org.apache.log4j.Logger;
 import org.apache.log4j.FileAppender;
-import org.apache.log4j.helpers.LogLog;
-
+import org.apache.log4j.PatternLayout;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class CustomRealTimeAppender extends FileAppender {
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-    private String lastFileName;
-    private String apiName; // New field to store API name
+public class CustomMultiApiAppender extends FileAppender {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private String apiName = "default";
+    private String baseLogPath = "../maestro_lib/logs";
 
-    public CustomRealTimeAppender(String apiName) {
+    public void setApiName(String apiName) {
         this.apiName = apiName;
     }
-
+    
+    public void setBaseLogPath(String baseLogPath) {
+        this.baseLogPath = baseLogPath;
+    }
+    
     @Override
     public void activateOptions() {
-        updateFileName();
-        super.activateOptions();
-    }
-
-    private void updateFileName() {
         try {
-            String currentDate = dateFormat.format(new Date());
-            File logsDir = new File("Logs");
-            if (!logsDir.exists()) {
-                logsDir.mkdirs();
-            }
-
-            String newFileName = "Logs/maestrologs_" + apiName + "_" + currentDate + ".log";
-            if (!newFileName.equals(lastFileName)) {
-                setFile(newFileName, true, false, 0);
-                lastFileName = newFileName;
-            }
+            String date = DATE_FORMAT.format(new Date());
+            
+            // Ensure base and API-specific directories exist
+            File baseDir = new File(baseLogPath);
+            if (!baseDir.exists()) baseDir.mkdirs();
+            
+            File apiDir = new File(baseDir, apiName);
+            if (!apiDir.exists()) apiDir.mkdirs();
+            
+            // Create log file path
+            String logFileName = baseLogPath + File.separator + 
+                                apiName + File.separator + 
+                                "maestro_" + apiName + "_" + date + ".log";
+            
+            // Configure file appender
+            setFile(logFileName);
+            setLayout(new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n"));
+            setAppend(true);
+            
+            super.activateOptions();
         } catch (IOException e) {
-            LogLog.error("Error updating log file", e);
-        }
-    }
-
-    @Override
-    protected void subAppend(org.apache.log4j.spi.LoggingEvent event) {
-        updateFileName();
-        super.subAppend(event);
-        if (qw != null) {
-            qw.flush();
+            System.err.println("Error configuring log file: " + e.getMessage());
         }
     }
 }
