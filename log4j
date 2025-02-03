@@ -1,25 +1,20 @@
-log4j.rootLogger = INFO, API1File, API2File, stdout
+# Root Logger
+log4j.rootLogger=INFO, PrimaryRoleFile, SensitivityFile, stdout
 
-# Appender for API1
-log4j.appender.API1File=com.socgen.dbe.CustomRealTimeAppender
-log4j.appender.API1File.apiName=API1
-log4j.appender.API1File.File=../maestro_lib/logs/API1/maestrologs_{apiName}_{date}.log
-log4j.appender.API1File.ImmediateFlush=true
-log4j.appender.API1File.BufferedIO=false
-log4j.appender.API1File.layout=org.apache.log4j.PatternLayout
-log4j.appender.API1File.layout.ConversionPattern=%d (yyyy-MM-dd HH:mm:ss) [%t] %-5p %c(1): %m%n
+# Primary Role API Appender
+log4j.appender.PrimaryRoleFile=com.socgen.dbe.CustomMultiApiAppender
+log4j.appender.PrimaryRoleFile.apiName=primary_role
+log4j.appender.PrimaryRoleFile.baseLogPath=../maestro_lib/logs
+log4j.appender.PrimaryRoleFile.ImmediateFlush=true
 
-# Appender for API2
-log4j.appender.API2File=com.socgen.dbe.CustomRealTimeAppender
-log4j.appender.API2File.apiName=API2
-log4j.appender.API2File.File=../maestro_lib/logs/API2/maestrologs_{apiName}_{date}.log
-log4j.appender.API2File.ImmediateFlush=true
-log4j.appender.API2File.BufferedIO=false
-log4j.appender.API2File.layout=org.apache.log4j.PatternLayout
-log4j.appender.API2File.layout.ConversionPattern=%d (yyyy-MM-dd HH:mm:ss) [%t] %-5p %c(1): %m%n
+# Sensitivity API Appender
+log4j.appender.SensitivityFile=com.socgen.dbe.CustomMultiApiAppender
+log4j.appender.SensitivityFile.apiName=sensitivity
+log4j.appender.SensitivityFile.baseLogPath=../maestro_lib/logs
+log4j.appender.SensitivityFile.ImmediateFlush=true
 
 # Console Appender
 log4j.appender.stdout=org.apache.log4j.ConsoleAppender
 log4j.appender.stdout.Target=System.out
 log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-log4j.appender.stdout.layout.ConversionPattern=%d (yyyy-MM-dd HH:mm:ss) [%t] %-5p %c(1): %m%n
+log4j.appender.stdout.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n
