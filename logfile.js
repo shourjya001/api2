@@ -2,23 +2,18 @@ package com.socgen.dbe;
 
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.helpers.LogLog;
-import org.apache.log4j.spi.LoggingEvent;
-import java.io.*;
+
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CustomRealTimeAppender extends FileAppender {
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
     private String lastFileName;
-    private String apiName; // To identify which API's logs we're handling
+    private String apiName; // New field to store API name
 
-    // Constructor to set API name
     public CustomRealTimeAppender(String apiName) {
-        this.apiName = apiName;
-    }
-
-    // Setter for API name if needed after construction
-    public void setApiName(String apiName) {
         this.apiName = apiName;
     }
 
@@ -30,43 +25,26 @@ public class CustomRealTimeAppender extends FileAppender {
 
     private void updateFileName() {
         try {
-            String date = dateFormat.format(new Date());
-            
-            // Create base logs directory
-            File baseLogsDir = new File("maestro_lib/logs");
-            if (!baseLogsDir.exists()) {
-                baseLogsDir.mkdirs();
+            String currentDate = dateFormat.format(new Date());
+            File logsDir = new File("Logs");
+            if (!logsDir.exists()) {
+                logsDir.mkdirs();
             }
 
-            // Create API-specific directory
-            File apiLogsDir = new File(baseLogsDir, apiName);
-            if (!apiLogsDir.exists()) {
-                apiLogsDir.mkdirs();
-            }
-
-            // Construct new file name with API-specific path
-            String newFileName = "maestro_lib/logs/" + apiName + "/maestrologs_" + date + ".log";
-
+            String newFileName = "Logs/maestrologs_" + apiName + "_" + currentDate + ".log";
             if (!newFileName.equals(lastFileName)) {
+                setFile(newFileName, true, false, 0);
                 lastFileName = newFileName;
-                setFile(newFileName, true, bufferedIO, bufferSize);
             }
         } catch (IOException e) {
-            LogLog.error("Error updating log file for API: " + apiName, e);
+            LogLog.error("Error updating log file", e);
         }
     }
 
     @Override
-    protected void subAppend(LoggingEvent event) {
-        String currentDate = dateFormat.format(new Date());
-        String expectedFileName = "maestro_lib/logs/" + apiName + "/maestrologs_" + currentDate + ".log";
-
-        if (!expectedFileName.equals(lastFileName)) {
-            updateFileName();
-        }
-
+    protected void subAppend(org.apache.log4j.spi.LoggingEvent event) {
+        updateFileName();
         super.subAppend(event);
-        
         if (qw != null) {
             qw.flush();
         }
