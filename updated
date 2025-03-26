@@ -1,0 +1,125 @@
+import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.zip.GZIPInputStream;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class RestClientUtility {
+
+    public ResponseSensitivity sendInternalRatingsApi() throws IOException {
+        String scope = "api.get-third-parties.v1";
+
+        // Retrieve Client ID and Secret from properties
+        String clientId = dbeclientProperties.getMaestrosensitivityClientId();
+        String secretId = dbeclientProperties.getMaestrosensitivitySecretId();
+
+        // Generate access token
+        String access_token = generateSGconnectToken(scope, clientId, secretId);
+        ResponseSensitivity responseObject = null;
+
+        // Create sensitivity date parameter
+        LocalDate today = LocalDate.now();
+        String formattedDate = today.toString();
+        String sensitivitydate = "?snapshotDate=" + formattedDate;
+
+        // Build HTTP headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + access_token);
+        headers.set("Content-Language", "en-US");
+        headers.set("Accept", "application/json");
+        headers.set("Content-Type", "application/json");
+        headers.set("Accept-Encoding", "gzip, deflate");
+
+        // Create HTTP entity with headers
+        HttpEntity<String> entity = new HttpEntity<>("", headers);
+
+        // Construct API URL
+        String apiUrl = this.dbeclientProperties.getMaestrosensitivityApiUrl() + sensitivitydate;
+        System.out.println("Calling API URL: " + apiUrl);
+        log.info("Calling API URL: " + apiUrl);
+
+        try {
+            // Make API call
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> result = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
+
+            // Extract status code
+            int status = (result.getStatusCode() != null) ? result.getStatusCode().value() : 0;
+
+            // Handle error status codes
+            if (status == 0 || status == 401 || status == 402 || status == 403 || status == 404 || status == 500 || status == 201 || status == 501) {
+                String errorMessage = "API returned status code: " + status;
+                System.err.println(errorMessage);
+                log.error(errorMessage);
+                sendMaestroDataService.sendErrorNotification("API Error", errorMessage);
+                return null;
+            }
+
+            // Process successful response
+            if (status == 200) {
+                System.out.println("Successfully Data received from Maestro API");
+                log.info("Successfully Data received from Maestro API");
+
+                String decompressedJson = decompressResponse(result);
+                responseObject = parseResponse(decompressedJson);
+            }
+
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientErrorException: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            sendMaestroDataService.sendErrorNotification("API ERROR", e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("Exception occurred while calling API: ", e);
+            sendMaestroDataService.sendErrorNotification("API Error", e.getMessage());
+            return null;
+        }
+
+        return responseObject;
+    }
+
+    // Decompress API response if it is GZIP compressed
+    private String decompressResponse(ResponseEntity<String> result) throws IOException {
+        boolean isGzip = result.getHeaders().getFirst("Content-Encoding") != null &&
+                         result.getHeaders().getFirst("Content-Encoding").equalsIgnoreCase("gzip");
+
+        if (isGzip) {
+            try (GZIPInputStream gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(result.getBody().getBytes(StandardCharsets.ISO_8859_1)))) {
+                InputStreamReader reader = new InputStreamReader(gzipInputStream, StandardCharsets.UTF_8);
+                return new BufferedReader(reader).lines().reduce("", (a, b) -> a + b);
+            }
+        } else {
+            return result.getBody();
+        }
+    }
+
+    // Parse JSON response into ResponseSensitivity object
+    private ResponseSensitivity parseResponse(String json) {
+        ResponseSensitivity responseObject = new ResponseSensitivity();
+        try {
+            ObjectMapper mapperObj = new ObjectMapper();
+            List<Sensitivity> sensitivities = mapperObj.readValue(json, new TypeReference<List<Sensitivity>>() {});
+
+            // Process each sensitivity
+            for (Sensitivity sensitivity : sensitivities) {
+                if (sensitivity.getBdrId() != null) {
+                    String bdrid = sensitivity.getBdrId();
+                    if (bdrid.length() < 10) {
+                        bdrid = String.format("%010d", Long.parseLong(bdrid));
+                        sensitivity.setBdrId(bdrid);
+                    }
+                }
+            }
+
+            // Assign parsed data to response object
+            responseObject.setSensitivityList(sensitivities);
+        } catch (Exception e) {
+            log.error("Error deserializing response: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return responseObject;
+    }
+}
