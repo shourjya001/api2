@@ -1,0 +1,52 @@
+// Function to handle the main logic
+function toggleCodriaFields() {
+    let subGroupOption = document.getElementById('sub_group_option');
+    let leOption = document.getElementById('le_option');
+    let codriaCodeField = document.getElementById('codria_code');
+    let sgrCodeField = document.getElementById('txtsgr_code');
+    let codriaLeCodeField = document.getElementById('codria_le_code');
+    let txtLeCodeField = document.getElementById('txtle_code');
+
+    if (subGroupOption && subGroupOption.checked) {
+        // If LE is selected
+        document.getElementById('codria_section').style.display = '';
+        document.getElementById('SGR_SEC').style.display = '';
+        document.getElementById('fetchCFDDetails').style.display = 'none';
+        document.getElementById('LE_SEC').style.display = 'none';
+
+        // Debug: Check values before disabling
+        console.log("Debug - SGR Code:", sgrCodeField.value);
+        console.log("Debug - Codria Code:", codriaCodeField.value);
+
+        // Ensure the value is trimmed and checked correctly
+        leOption.disabled = (sgrCodeField.value.trim() === "" || codriaCodeField.value.trim() === "");
+
+    } else {
+        // If Sub-group is selected
+        document.getElementById('codria_le_section').style.display = '';
+        document.getElementById('LE_SEC').style.display = '';
+        document.getElementById('fetchCFDDetails').style.display = '';
+        document.getElementById('codria_section').style.display = 'none';
+        document.getElementById('SGR_SEC').style.display = 'none';
+
+        // Disable sub_group_option based on conditions
+        subGroupOption.disabled = (txtLeCodeField.value.trim() !== "");
+        subGroupOption.disabled = (codriaLeCodeField.value.trim() !== "");
+    }
+}
+
+// Ensure toggleCodriaFields() updates when the user types in the codria_code field
+document.addEventListener('DOMContentLoaded', function () {
+    let codriaCodeInput = document.getElementById('codria_code');
+    if (codriaCodeInput) {
+        codriaCodeInput.addEventListener('input', toggleCodriaFields);
+    }
+
+    // Set Sub-group option as default selected and initialize
+    let subGroupOption = document.getElementById('sub_group_option');
+    if (subGroupOption) {
+        subGroupOption.checked = true;
+    }
+
+    toggleCodriaFields(); // Run function initially
+});
