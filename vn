@@ -1,0 +1,111 @@
+// Function to handle the main logic
+function toggleCodriaFields() {
+    var subGroupOption = document.getElementById('sub_group_option');
+    var leOption = document.getElementById('le_option');
+    var codriaCode = document.getElementById('codria_code');
+    var codriaLeCode = document.getElementById('codria_le_code');
+
+    if (subGroupOption && subGroupOption.checked) {
+        // If Sub-group is selected
+        document.getElementById('codria_le_section').style.display = '';
+        document.getElementById('LE_SEC').style.display = '';
+        document.getElementById('fetchCFDetailsle').style.display = 'none';
+        document.getElementById('fetchCFDetails').style.display = 'none';
+        document.getElementById('codria_section').style.display = 'none';
+        document.getElementById('SGR_SEC').style.display = 'none';
+
+        // Disable LE radio button if codria_code has a value
+        if (leOption) {
+            leOption.disabled = codriaCode && codriaCode.value.trim() !== "";
+        }
+
+    } else {
+        // If LE is selected
+        document.getElementById('codria_section').style.display = '';
+        document.getElementById('SGR_SEC').style.display = '';
+        document.getElementById('fetchCFDetails').style.display = 'none';
+        document.getElementById('fetchCFDetailsle').style.display = 'none';
+        document.getElementById('codria_le_section').style.display = 'none';
+        document.getElementById('LE_SEC').style.display = 'none';
+
+        // Disable Sub-group radio button if codria_le_code has a value
+        if (subGroupOption) {
+            subGroupOption.disabled = codriaLeCode && codriaLeCode.value.trim() !== "";
+        }
+    }
+}
+
+// Function to disable radio buttons when inputs change
+function handleCodriaChanges() {
+    var codriaCode = document.getElementById('codria_code');
+    var codriaLeCode = document.getElementById('codria_le_code');
+    var leOption = document.getElementById('le_option');
+    var subGroupOption = document.getElementById('sub_group_option');
+
+    if (codriaCode) {
+        codriaCode.onchange = function () {
+            if (leOption) {
+                leOption.disabled = codriaCode.value.trim() !== "";
+            }
+        };
+    }
+
+    if (codriaLeCode) {
+        codriaLeCode.onchange = function () {
+            if (subGroupOption) {
+                subGroupOption.disabled = codriaLeCode.value.trim() !== "";
+            }
+        };
+    }
+}
+
+// Ensure compatibility with IE5 and older browsers
+function domReady(callback) {
+    if (document.attachEvent) {
+        // For IE5, IE6, IE7, and IE8
+        if (document.readyState === "complete" || document.readyState === "loaded") {
+            callback();
+        } else {
+            document.attachEvent("onreadystatechange", function () {
+                if (document.readyState === "complete") {
+                    callback();
+                }
+            });
+        }
+    } else if (document.addEventListener) {
+        // Modern browsers
+        document.addEventListener("DOMContentLoaded", callback, false);
+    }
+}
+
+// Function to initialize form state on page load
+function initForm() {
+    var subGroupOption = document.getElementById('sub_group_option');
+    var leOption = document.getElementById('le_option');
+    var codriaCode = document.getElementById('codria_code');
+    var codriaLeCode = document.getElementById('codria_le_code');
+
+    if (subGroupOption) {
+        subGroupOption.checked = true;
+    }
+
+    toggleCodriaFields();  // Ensure correct visibility and state
+
+    // Disable LE radio button if codria_code has a value
+    if (leOption) {
+        leOption.disabled = codriaCode && codriaCode.value.trim() !== "";
+    }
+
+    // Disable Sub-group radio button if codria_le_code has a value
+    if (subGroupOption) {
+        subGroupOption.disabled = codriaLeCode && codriaLeCode.value.trim() !== "";
+    }
+
+    // Attach event listeners for changes in input fields
+    handleCodriaChanges();
+
+    return true;
+}
+
+// Run initForm on page load
+domReady(initForm);
